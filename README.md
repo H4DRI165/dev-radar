@@ -1,75 +1,92 @@
-# React + TypeScript + Vite
+# Dev Radar
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A small practice app for rebuilding hands-on React/TypeScript skills across two API paradigms and two state models.
 
-Currently, two official plugins are available:
+- **REST integration** — search a GitHub user and view their profile and repositories.
+- **GraphQL integration** — look up a country and view its details.
+- **Server state** — fetched per-route via React Router loaders.
+- **Client state** — a persistent favorites list via Zustand.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Full design and rationale live in [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md).
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer | Choice |
+|---|---|
+| Framework | React + TypeScript |
+| Build tool | Vite |
+| Routing | React Router (data router, `createBrowserRouter`) |
+| REST client | native `fetch`, called inside loaders |
+| GraphQL client | Apollo Client, `client.query()` inside loaders |
+| Client state | Zustand with `persist` middleware |
+| Styling | Tailwind CSS v4 |
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+The dev server prints a local URL (default `http://localhost:5173`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the Vite dev server with HMR |
+| `npm run build` | Type-check with `tsc -b`, then build to `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Run ESLint |
+
+## Project Structure
+
+Feature-based organization: each feature owns its API logic, types, loaders, and UI.
 
 ```
+src/
+  app/
+    router.tsx          # createBrowserRouter config, all routes registered here
+    root.tsx            # root layout: nav bar + <Outlet />
+  features/
+    home/               # search entry page
+    github/             # REST: profile, repos, compare
+    countries/          # GraphQL: country detail
+    favorites/          # Zustand store + favorites page
+  shared/
+    components/         # Button, Spinner, Card, NotFound, etc.
+    lib/                # apolloClient.ts, githubClient.ts
+  main.tsx              # mounts <RouterProvider />
+  index.css             # Tailwind entry
+```
+
+## Routes
+
+| Path | Purpose | Data source | Loader |
+|---|---|---|---|
+| `/` | Home / search entry | none | No |
+| `/user/:username` | GitHub profile: bio, repos, languages, stars | GitHub REST | Yes |
+| `/country/:code` | Country detail: capital, languages, currency | Countries GraphQL | Yes |
+| `/compare?a=&b=` | Two GitHub users side by side | GitHub REST (parallel) | Yes |
+| `/favorites` | Saved users and countries | Zustand store | No |
+| `*` | 404 fallback | none | `errorElement` + splat route |
+
+## API References
+
+- **GitHub REST** (no auth for basic use, rate-limited): `https://api.github.com/users/{username}` and `https://api.github.com/users/{username}/repos`
+- **Countries GraphQL**: `https://countries.trevorblades.com/`
+
+## Status
+
+Tracks the milestones in [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md#9-build-order--milestones).
+
+- [x] 1. Scaffold project, install React Router, Apollo Client, Zustand, Tailwind
+- [x] 2. `createBrowserRouter` with all routes, root layout, and nav
+- [ ] 3. Home page search input → navigate to `/user/:username`
+- [ ] 4. GitHub loader + UserProfile page (REST)
+- [ ] 5. Apollo client + Countries loader + CountryDetail page (GraphQL)
+- [ ] 6. Compare page (query params + parallel REST fetch)
+- [ ] 7. Zustand favorites store with `persist` middleware
+- [ ] 8. Favorites page + favorite buttons
+- [ ] 9. 404 route + per-route `errorElement`
+- [ ] 10. Polish: `useNavigation()` loading states + styling pass
